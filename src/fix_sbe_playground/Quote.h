@@ -91,7 +91,6 @@
 
 
 #include "Market.h"
-#include "Decimal.h"
 #include "Currency.h"
 
 namespace fix {
@@ -136,7 +135,7 @@ public:
         m_offset(offset),
         m_actingVersion(actingVersion)
     {
-        if (SBE_BOUNDS_CHECK_EXPECT(((m_offset + 15) > m_bufferLength), false))
+        if (SBE_BOUNDS_CHECK_EXPECT(((m_offset + 10) > m_bufferLength), false))
         {
             throw std::runtime_error("buffer too short for flyweight [E107]");
         }
@@ -168,7 +167,7 @@ public:
 
     SBE_NODISCARD static SBE_CONSTEXPR std::uint64_t encodedLength() SBE_NOEXCEPT
     {
-        return 15;
+        return 10;
     }
 
     SBE_NODISCARD std::uint64_t offset() const SBE_NOEXCEPT
@@ -506,14 +505,41 @@ public:
         return 5;
     }
 
-private:
-    Decimal m_price;
-
-public:
-    SBE_NODISCARD Decimal &price()
+    static SBE_CONSTEXPR float priceNullValue() SBE_NOEXCEPT
     {
-        m_price.wrap(m_buffer, m_offset + 5, m_actingVersion, m_bufferLength);
-        return m_price;
+        return SBE_FLOAT_NAN;
+    }
+
+    static SBE_CONSTEXPR float priceMinValue() SBE_NOEXCEPT
+    {
+        return 1.401298464324817E-45f;
+    }
+
+    static SBE_CONSTEXPR float priceMaxValue() SBE_NOEXCEPT
+    {
+        return 3.4028234663852886E38f;
+    }
+
+    static SBE_CONSTEXPR std::size_t priceEncodingLength() SBE_NOEXCEPT
+    {
+        return 4;
+    }
+
+    SBE_NODISCARD float price() const SBE_NOEXCEPT
+    {
+        union sbe_float_as_uint_u val;
+        std::memcpy(&val, m_buffer + m_offset + 5, sizeof(float));
+        val.uint_value = SBE_LITTLE_ENDIAN_ENCODE_32(val.uint_value);
+        return val.fp_value;
+    }
+
+    Quote &price(const float value) SBE_NOEXCEPT
+    {
+        union sbe_float_as_uint_u val;
+        val.fp_value = value;
+        val.uint_value = SBE_LITTLE_ENDIAN_ENCODE_32(val.uint_value);
+        std::memcpy(m_buffer + m_offset + 5, &val, sizeof(float));
+        return *this;
     }
 
     SBE_NODISCARD static const char *currencyMetaAttribute(const MetaAttribute metaAttribute) SBE_NOEXCEPT
@@ -542,7 +568,7 @@ public:
 
     SBE_NODISCARD static SBE_CONSTEXPR std::size_t currencyEncodingOffset() SBE_NOEXCEPT
     {
-        return 14;
+        return 9;
     }
 
     SBE_NODISCARD static SBE_CONSTEXPR std::size_t currencyEncodingLength() SBE_NOEXCEPT
@@ -553,21 +579,21 @@ public:
     SBE_NODISCARD std::uint8_t currencyRaw() const SBE_NOEXCEPT
     {
         std::uint8_t val;
-        std::memcpy(&val, m_buffer + m_offset + 14, sizeof(std::uint8_t));
+        std::memcpy(&val, m_buffer + m_offset + 9, sizeof(std::uint8_t));
         return (val);
     }
 
     SBE_NODISCARD Currency::Value currency() const
     {
         std::uint8_t val;
-        std::memcpy(&val, m_buffer + m_offset + 14, sizeof(std::uint8_t));
+        std::memcpy(&val, m_buffer + m_offset + 9, sizeof(std::uint8_t));
         return Currency::get((val));
     }
 
     Quote &currency(const Currency::Value value) SBE_NOEXCEPT
     {
         std::uint8_t val = (value);
-        std::memcpy(m_buffer + m_offset + 14, &val, sizeof(std::uint8_t));
+        std::memcpy(m_buffer + m_offset + 9, &val, sizeof(std::uint8_t));
         return *this;
     }
 
@@ -586,7 +612,7 @@ friend std::basic_ostream<CharT, Traits> & operator << (
 
     builder << ", ";
     builder << R"("price": )";
-    builder << writer.price();
+    builder << +writer.price();
 
     builder << ", ";
     builder << R"("currency": )";

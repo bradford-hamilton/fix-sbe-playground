@@ -92,7 +92,6 @@
 
 #include "Quote.h"
 #include "MessageHeader.h"
-#include "Decimal.h"
 #include "Currency.h"
 #include "Market.h"
 
@@ -116,7 +115,7 @@ private:
     }
 
 public:
-    static const std::uint16_t SBE_BLOCK_LENGTH = static_cast<std::uint16_t>(17);
+    static const std::uint16_t SBE_BLOCK_LENGTH = static_cast<std::uint16_t>(12);
     static const std::uint16_t SBE_TEMPLATE_ID = static_cast<std::uint16_t>(1);
     static const std::uint16_t SBE_SCHEMA_ID = static_cast<std::uint16_t>(1);
     static const std::uint16_t SBE_SCHEMA_VERSION = static_cast<std::uint16_t>(0);
@@ -173,7 +172,7 @@ public:
 
     SBE_NODISCARD static SBE_CONSTEXPR std::uint16_t sbeBlockLength() SBE_NOEXCEPT
     {
-        return static_cast<std::uint16_t>(17);
+        return static_cast<std::uint16_t>(12);
     }
 
     SBE_NODISCARD static SBE_CONSTEXPR std::uint64_t sbeBlockAndHeaderLength() SBE_NOEXCEPT
@@ -335,7 +334,7 @@ public:
         return m_quote;
     }
 
-    SBE_NODISCARD static const char *amountMetaAttribute(const MetaAttribute metaAttribute) SBE_NOEXCEPT
+    SBE_NODISCARD static const char *volumeMetaAttribute(const MetaAttribute metaAttribute) SBE_NOEXCEPT
     {
         switch (metaAttribute)
         {
@@ -344,57 +343,57 @@ public:
         }
     }
 
-    static SBE_CONSTEXPR std::uint16_t amountId() SBE_NOEXCEPT
+    static SBE_CONSTEXPR std::uint16_t volumeId() SBE_NOEXCEPT
     {
         return 2;
     }
 
-    SBE_NODISCARD static SBE_CONSTEXPR std::uint64_t amountSinceVersion() SBE_NOEXCEPT
+    SBE_NODISCARD static SBE_CONSTEXPR std::uint64_t volumeSinceVersion() SBE_NOEXCEPT
     {
         return 0;
     }
 
-    SBE_NODISCARD bool amountInActingVersion() SBE_NOEXCEPT
+    SBE_NODISCARD bool volumeInActingVersion() SBE_NOEXCEPT
     {
         return true;
     }
 
-    SBE_NODISCARD static SBE_CONSTEXPR std::size_t amountEncodingOffset() SBE_NOEXCEPT
+    SBE_NODISCARD static SBE_CONSTEXPR std::size_t volumeEncodingOffset() SBE_NOEXCEPT
     {
-        return 15;
+        return 10;
     }
 
-    static SBE_CONSTEXPR std::uint16_t amountNullValue() SBE_NOEXCEPT
+    static SBE_CONSTEXPR std::uint16_t volumeNullValue() SBE_NOEXCEPT
     {
         return SBE_NULLVALUE_UINT16;
     }
 
-    static SBE_CONSTEXPR std::uint16_t amountMinValue() SBE_NOEXCEPT
+    static SBE_CONSTEXPR std::uint16_t volumeMinValue() SBE_NOEXCEPT
     {
         return static_cast<std::uint16_t>(0);
     }
 
-    static SBE_CONSTEXPR std::uint16_t amountMaxValue() SBE_NOEXCEPT
+    static SBE_CONSTEXPR std::uint16_t volumeMaxValue() SBE_NOEXCEPT
     {
         return static_cast<std::uint16_t>(65534);
     }
 
-    static SBE_CONSTEXPR std::size_t amountEncodingLength() SBE_NOEXCEPT
+    static SBE_CONSTEXPR std::size_t volumeEncodingLength() SBE_NOEXCEPT
     {
         return 2;
     }
 
-    SBE_NODISCARD std::uint16_t amount() const SBE_NOEXCEPT
+    SBE_NODISCARD std::uint16_t volume() const SBE_NOEXCEPT
     {
         std::uint16_t val;
-        std::memcpy(&val, m_buffer + m_offset + 15, sizeof(std::uint16_t));
+        std::memcpy(&val, m_buffer + m_offset + 10, sizeof(std::uint16_t));
         return SBE_LITTLE_ENDIAN_ENCODE_16(val);
     }
 
-    TradeData &amount(const std::uint16_t value) SBE_NOEXCEPT
+    TradeData &volume(const std::uint16_t value) SBE_NOEXCEPT
     {
         std::uint16_t val = SBE_LITTLE_ENDIAN_ENCODE_16(value);
-        std::memcpy(m_buffer + m_offset + 15, &val, sizeof(std::uint16_t));
+        std::memcpy(m_buffer + m_offset + 10, &val, sizeof(std::uint16_t));
         return *this;
     }
 
@@ -419,8 +418,8 @@ friend std::basic_ostream<CharT, Traits> & operator << (
     builder << writer.quote();
 
     builder << ", ";
-    builder << R"("amount": )";
-    builder << +writer.amount();
+    builder << R"("volume": )";
+    builder << +writer.volume();
 
     builder << '}';
 
