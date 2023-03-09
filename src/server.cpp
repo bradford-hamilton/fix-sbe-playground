@@ -5,8 +5,14 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include "fix_sbe_playground/MessageHeader.h"
+#include "fix_sbe_playground/TradeData.h"
+
+using namespace fix::sbe::playground;
 
 int main() {
+  const int message_header_version = 0;
+
   int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
   if (sockfd < 0) {
     std::cerr << "Failed to create socket\n";
@@ -29,15 +35,21 @@ int main() {
   ssize_t num_bytes;
   socklen_t server_addr_len = sizeof(server_addr);
 
-  while (1) {
+  while (true) {
     num_bytes = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr*)&server_addr, &server_addr_len);
     if (num_bytes < 0) {
         std::cerr << "Failed to receive data" << std::endl;
         return 1;
     }
 
-    buffer[num_bytes] = '\0';
-    std::cout << "Received data: " << buffer << std::endl;
+    TradeData td;
+    MessageHeader hdr;
+
+    hdr.wrap(buffer, 0, message_header_version, sizeof(buffer));
+    td.wrapForDecode(buffer, hdr.encodedLength(), hdr.blockLength(), hdr.version(), sizeof(buffer));
+
+    std::cout << "Received MessageHeader: " << hdr << std::endl;
+    std::cout << "Received TradeData: " << td << std::endl;
   }
 
   close(sockfd);
