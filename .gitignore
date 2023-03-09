@@ -45,3 +45,5 @@ CTestTestfile.cmake
 _deps
 
 clt
+srv
+a.out*
