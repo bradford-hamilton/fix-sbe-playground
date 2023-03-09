@@ -30,8 +30,8 @@ int main() {
   server_addr.sin_port = htons(server_port);
 
   while (true) {
-    // Mock a TradeData message:
-    char buffer[2048];
+    // Mock a TradeData message and send to server
+    char buffer[1024];
     TradeData td;
 
     td.wrapAndApplyHeader(buffer, 0, sizeof(buffer));
@@ -42,10 +42,11 @@ int main() {
       .currency(Currency::USD);
     td.volume(12871);
 
-    // Mock and send data
     auto data = td.buffer();
+    auto data_len = td.sbeBlockAndHeaderLength();
 
-    if (sendto(sockfd, data, sizeof(data), 0, (struct sockaddr*)&server_addr, server_addr_len) < 0) {
+    auto s = sendto(sockfd, data, data_len, 0, (struct sockaddr*)&server_addr, server_addr_len);
+    if (s < 0) {
       std::cerr << "Failed to sendto\n";
       return 1;
     }

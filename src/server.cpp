@@ -31,11 +31,12 @@ int main() {
     return 1;
   }
 
-  char buffer[1024];
-  ssize_t num_bytes;
   socklen_t server_addr_len = sizeof(server_addr);
 
   while (true) {
+    char buffer[1024];
+    ssize_t num_bytes;
+
     num_bytes = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr*)&server_addr, &server_addr_len);
     if (num_bytes < 0) {
         std::cerr << "Failed to receive data" << std::endl;
