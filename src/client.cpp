@@ -11,9 +11,9 @@
 using namespace fix::sbe::playground;
 
 int main() {
-  const int message_header_version = 0;
   const char* server_ip = "127.0.0.1";
   const int server_port = 1234;
+  const int sendrecv_flags = 0;
 
   int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
   if (sockfd < 0) {
@@ -42,10 +42,14 @@ int main() {
       .currency(Currency::USD);
     td.volume(12871);
 
-    auto data = td.buffer();
-    auto data_len = td.sbeBlockAndHeaderLength();
-
-    auto s = sendto(sockfd, data, data_len, 0, (struct sockaddr*)&server_addr, server_addr_len);
+    auto s = sendto(
+      sockfd,
+      td.buffer(),
+      td.sbeBlockAndHeaderLength(),
+      sendrecv_flags,
+      (struct sockaddr*)&server_addr,
+      server_addr_len
+    );
     if (s < 0) {
       std::cerr << "Failed to sendto\n";
       return 1;
