@@ -5,10 +5,16 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <random>
+#include <cmath>
 #include "fix_sbe_playground/MessageHeader.h"
 #include "fix_sbe_playground/TradeData.h"
 
 using namespace fix::sbe::playground;
+
+TradeData mock_trade_data(char* buffer, uint64_t buffer_length);
+
+float aapl_price();
 
 int main() {
   const char* server_ip = "127.0.0.1";
@@ -32,15 +38,7 @@ int main() {
   while (true) {
     // Mock a TradeData message and send to server
     char buffer[1024];
-    TradeData td;
-
-    td.wrapAndApplyHeader(buffer, 0, sizeof(buffer));
-    td.quote()
-      .market(Market::NYSE)
-      .putSymbol("AAPL")
-      .price(153.03)
-      .currency(Currency::USD);
-    td.volume(12871);
+    auto td = mock_trade_data(buffer, sizeof(buffer));
 
     auto s = sendto(
       sockfd,
@@ -61,4 +59,29 @@ int main() {
   close(sockfd);
 
   return 0;
+}
+
+TradeData mock_trade_data(char* buffer, uint64_t buffer_length)
+{
+  TradeData td;
+
+  td.wrapAndApplyHeader(buffer, 0, buffer_length);
+  td.quote()
+    .market(Market::NYSE)
+    .putSymbol("AAPL")
+    .price(aapl_price())
+    .currency(Currency::USD);
+  td.volume(12871);
+
+  return td;
+};
+
+// Silly function to give me a different AAPL price between 125-150 for each message.
+float aapl_price()
+{
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<> dis(125.0, 175.0);
+
+  return std::round(dis(gen) * 100.0) / 100.0;
 }
