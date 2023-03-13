@@ -46,8 +46,8 @@ int main() {
       &server_addr_len
     );
     if (num_bytes < 0) {
-        std::cerr << "Failed to receive data" << std::endl;
-        return 1;
+      std::cerr << "Failed to receive data" << std::endl;
+      return 1;
     }
 
     TradeData td;
